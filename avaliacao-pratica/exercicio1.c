@@ -35,10 +35,21 @@ void inicializarTabelaHash(TabelaHash* tabelaHash) {
     }
 }
 
-void addProduct(TabelaHash* tabelaHash, Produto produto) {
-    system("cls");
+void adicionarProduto(TabelaHash* tabelaHash, Produto produto) {
     int indice = hash(produto.nome);
     
+    No* atual = tabelaHash[indice].inicio;
+    while (atual != NULL) {
+        if (strcmp(atual->produto.nome, produto.nome) == 0) {
+            atual->produto.quantidade += produto.quantidade;
+            atual->produto.preco = produto.preco;
+            printf("\n\tQuantidade do produto atualizada com sucesso!\n\n");
+            printf("\t"); system("pause");
+            return;
+        }
+        atual = atual->proximo;
+    }
+
     No* novoNo = (No*)malloc(sizeof(No));
     novoNo->produto = produto;
     novoNo->proximo = NULL;
@@ -53,63 +64,54 @@ void addProduct(TabelaHash* tabelaHash, Produto produto) {
     printf("\t"); system("pause");
 }
 
-void removeProduct(TabelaHash* tabelaHash, char* nome) {
-    system("cls");
+void removerProduto(TabelaHash* tabela, char* nome, int quantidade) {
     int indice = hash(nome);
-    
-    if (tabelaHash[indice].inicio == NULL) {
-        printf("\n\tProduto nao encontrado!\n\n");
-        printf("\t"); system("pause");
-        return;
-    }
-    
-    No* atual = tabelaHash[indice].inicio;
-    No* previous = NULL;
-    while (atual != NULL) {
-        if (strcmp(atual->produto.nome, nome) == 0) {
-            if (previous == NULL) {
-                tabelaHash[indice].inicio = atual->proximo;
-            } else {
-                previous->proximo = atual->proximo;
-            }
-            free(atual);
-            printf("\n\tProduto removido com sucesso!\n\n");
-            printf("\t"); system("pause");
-            return;
-        }
-        previous = atual;
+    No* atual = tabela[indice].inicio;
+    No* anterior = NULL;
+
+    while (atual != NULL && strcmp(atual->produto.nome, nome) != 0) {
+        anterior = atual;
         atual = atual->proximo;
     }
 
-    printf("\n\tProduto nao encontrado!\n\n");
-    printf("\t"); system("pause");
+    if (atual == NULL) {
+        printf("Produto não encontrado.\n");
+        return;
+    }
+
+    if (quantidade >= atual->produto.quantidade || quantidade == -1) {
+        if (anterior == NULL) {
+            tabela[indice].inicio = atual->proximo;
+        } else {
+            anterior->proximo = atual->proximo;
+        }
+        free(atual);
+    } else {
+        atual->produto.quantidade -= quantidade;
+    }
 }
 
+
 void buscarProduto(TabelaHash* tabelaHash, char* nome) {
-    system("cls");
     int indice = hash(nome);
     
     if (tabelaHash[indice].inicio == NULL) {
         printf("\n\tProduto nao encontrado!\n\n");
-        printf("\t"); system("pause");
         return;
     }
 
     No* atual = tabelaHash[indice].inicio;
     while (atual != NULL) {
         if (strcmp(atual->produto.nome, nome) == 0) {
-            printf("\n\n\tProduto encontrado:\n\n");
+            printf("\n\tProduto encontrado:\n\n");
             printf("\tNome: %s\n", atual->produto.nome);
             printf("\tPreco: R$ %.2f\n", atual->produto.preco);
             printf("\tQuantidade: %d\n\n", atual->produto.quantidade);
-            printf("\t"); system("pause");
             return;
         }
         atual = atual->proximo;
     }
-
     printf("\n\tProduto nao encontrado!\n\n");
-    printf("\t"); system("pause");
 }
 
 int main() {
@@ -133,11 +135,14 @@ int main() {
 
         switch (opcao) {
             case 1:
-                printf("\n\n\tNome do produto: ");
+                printf("\n\tNome do produto: ");
                 scanf("%s", nome);
-                printf("\tPreco R$: ");
+
+                buscarProduto(tabelaHash, nome);
+
+                printf("\tDefinir/Atualizar Preco R$: ");
                 scanf("%f", &preco);
-                printf("\tquantidade: ");
+                printf("\tAdicionar quantidade(un): ");
                 scanf("%d", &quantidade);
 
                 Produto produto;
@@ -145,15 +150,28 @@ int main() {
                 produto.preco = preco;
                 produto.quantidade = quantidade;
 
-                addProduct(tabelaHash, produto);
+                adicionarProduto(tabelaHash, produto);
                 printf("\n\tProduto adicionado com sucesso!\n\n");
                 break;
 
             case 2:
-                printf("\n\tNome do produto: ");
+                printf("\n\tDigite o nome do produto a ser removido: ");
                 scanf("%s", nome);
 
-                removeProduct(tabelaHash, nome);
+                buscarProduto(tabelaHash, nome);
+
+                printf("\n\tDigite a quantidade a ser removida ou 't' para 'tudo': ");
+                char entrada[10];
+                scanf("%s", entrada);
+
+                int quantidade;
+                if (strcmp(entrada, "t") == 0) {
+                    quantidade = -1;
+                } else {
+                    quantidade = atoi(entrada);
+                }
+
+                removerProduto(tabelaHash, nome, quantidade);
                 break;
 
             case 3:
@@ -161,6 +179,7 @@ int main() {
                 scanf("%s", nome);
 
                 buscarProduto(tabelaHash, nome);
+                printf("\t"); system("pause");
                 break;
 
             case 4:
