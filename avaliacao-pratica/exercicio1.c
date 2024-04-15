@@ -5,6 +5,9 @@
 #define MAX_PRODUTOS 100
 #define MAX_NOME 50
 
+// Lucas Augusto Covaltchuk Calixto RA: 22000109-2, Leonardo Demetrio
+// Franchini RA: 22014274-2, Eduardo Thomé RA: 22110037-2
+
 typedef struct {
     char nome[MAX_NOME];
     float preco;

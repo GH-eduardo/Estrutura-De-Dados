@@ -8,6 +8,9 @@ typedef struct no {
     struct no *esq, *dir;
 } No;
 
+// Lucas Augusto Covaltchuk Calixto RA: 22000109-2, Leonardo Demetrio
+// Franchini RA: 22014274-2, Eduardo Thomé RA: 22110037-2
+
 FILE *arq;
 
 No *novoNo(char *item) {

@@ -4,6 +4,9 @@
 
 #define MAX_CONTATOS 80
 
+// Lucas Augusto Covaltchuk Calixto RA: 22000109-2, Leonardo Demetrio
+// Franchini RA: 22014274-2, Eduardo Thomé RA: 22110037-2
+
 typedef struct Contato {
     char nome[50];
     char telefone[20];
