@@ -4,6 +4,7 @@
 
 #define MAX_PRODUTOS 100
 #define MAX_NOME 50
+#define A 0.6180339887  // constante multiplicativa
 
 // Lucas Augusto Covaltchuk Calixto RA: 22000109-2, Leonardo Demetrio
 // Franchini RA: 22014274-2, Eduardo Thomé RA: 22110037-2
@@ -23,13 +24,68 @@ typedef struct {
     No* inicio;
 } TabelaHash;
 
-int hash(char* nome) {
+typedef struct NoPilha {
+    int operacao;
+    Produto produto;
+    struct NoPilha* proximo;
+}NoPilha;
+
+typedef struct Pilha {
+    NoPilha* topo;
+} Pilha;
+
+void push(Pilha* pilha, Produto produto, int operacao, char* nome, int quantidade) {
+    NoPilha* novo = (NoPilha*) malloc(sizeof(NoPilha));
+
+    if (novo == NULL) {
+        printf("\n\tFalha na alocação de memória!\n\n");
+        return;
+    }
+    if (operacao == -1) {
+        strcpy(novo->produto.nome, nome);
+        novo->produto.quantidade = quantidade;
+    }
+    else {
+        novo->produto = produto;
+        novo->operacao = operacao;
+    }
+    novo->proximo = pilha->topo;
+    pilha->topo = novo;
+}
+
+Produto pop(Pilha* pilha) {
+    if (pilha->topo == NULL) {
+        printf("\n\tPilha vazia!\n\n");
+        Produto produtoVazio;
+        return produtoVazio;
+    }
+    NoPilha* temp = pilha->topo;
+    Produto produtoRemovido = pilha->topo->produto;
+    pilha->topo = pilha->topo->proximo;
+    free(temp);
+    return produtoRemovido;
+}
+
+void imprimirPilha(Pilha* pilha) {
+    NoPilha* atual = pilha->topo;
+    while (atual != NULL) {
+        printf("\n###############################################\n\n\tOperacao: %s\n", atual->operacao == 1 ? "Adicionar" : "Remover");
+        printf("\n\tNome: %s\n", atual->produto.nome);
+        atual->operacao == 1 ? printf("\tPreco: R$ %.2f\n", atual->produto.preco) : printf("");
+        printf("\tQuantidade: %d\n\n", atual->produto.quantidade);
+        atual = atual->proximo;
+    }
+}
+
+unsigned int hash(char* nome) {
     int valorHash = 0;
     int tamanhoNome = strlen(nome);
     for (int i = 0; i < tamanhoNome; i++) {
         valorHash += nome[i];
     }
-    return valorHash % MAX_PRODUTOS;
+    double valor = valorHash * A;
+    valor = valor - (int)valor;  // descarta a parte inteira
+    return (unsigned int)(MAX_PRODUTOS * valor);  // multiplica pelo tamanho da tabela e retorna a parte inteira
 }
 
 void inicializarTabelaHash(TabelaHash* tabelaHash) {
@@ -120,6 +176,8 @@ void buscarProduto(TabelaHash* tabelaHash, char* nome) {
 int main() {
     TabelaHash tabelaHash[MAX_PRODUTOS];
     inicializarTabelaHash(tabelaHash);
+    Pilha* pilha = (Pilha*) malloc(sizeof(Pilha));
+    pilha->topo = NULL;
 
     int opcao;
     char nome[MAX_NOME];
@@ -132,7 +190,8 @@ int main() {
         printf("\t1. Adicionar produto\n");
         printf("\t2. Remover produto\n");
         printf("\t3. Buscar produto\n");
-        printf("\t4. Sair\n\n\n");
+        printf("\t4. Imprimir historico\n");
+        printf("\t5. Sair\n\n\n");
         printf("\tEscolha uma opcao: ");
         scanf("%d", &opcao);
 
@@ -154,6 +213,7 @@ int main() {
                 produto.quantidade = quantidade;
 
                 adicionarProduto(tabelaHash, produto);
+                push(pilha, produto, 1, "", 0);
                 printf("\n\tProduto adicionado com sucesso!\n\n");
                 break;
 
@@ -164,16 +224,15 @@ int main() {
                 buscarProduto(tabelaHash, nome);
 
                 printf("\n\tDigite a quantidade a ser removida ou 't' para 'tudo': ");
-                char entrada[10];
+                char entrada[5];
                 scanf("%s", entrada);
 
-                int quantidade;
+                quantidade = atoi(entrada);
+                push(pilha, produto, -1, nome, quantidade);
+
                 if (strcmp(entrada, "t") == 0) {
                     quantidade = -1;
-                } else {
-                    quantidade = atoi(entrada);
                 }
-
                 removerProduto(tabelaHash, nome, quantidade);
                 break;
 
@@ -186,6 +245,11 @@ int main() {
                 break;
 
             case 4:
+                imprimirPilha(pilha);
+                printf("\t"); system("pause");
+                break;
+
+            case 5:
                 printf("\tSaindo...\n");
                 break;
 
@@ -193,7 +257,9 @@ int main() {
                 printf("\n\tEscolha invalida! tente novamente.\n\n");
                 break;
         }
-    } while (opcao != 4);
+    } while (opcao != 5);
+
+    free(pilha);
 
     return 0;
 }
